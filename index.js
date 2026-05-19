@@ -1,12 +1,12 @@
 import express from 'express'; 
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import dbConnection from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import cors from "cors";
 import blogRouter from './routes/blogRoutes.js';
   
 const app = express();
-dotenv.config();
+
 dbConnection();
 
 ////// midddleware

@@ -94,6 +94,8 @@ export const forgotPswd = async (req, res) => {
     })
   }
 
+
+
 /////// reset pswd token
 const resetToken = jwt.sign({id:user._id}, process.env.JWT_SECRET,{expiresIn:'1d'});
 const redirectLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`

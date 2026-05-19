@@ -55,4 +55,18 @@ return  resolve(result)
  
   
 } 
-export {uploadImg}
+
+
+
+const deleteImg = async (public_id) => {
+  try {
+    if (!public_id) return null;
+    
+    const result = await cloudinary.v2.uploader.destroy(public_id);
+    return result;
+  } catch (error) {
+    console.log('error in deleting img from cloudinary--->', error);
+  }
+};
+
+export { uploadImg, deleteImg };
