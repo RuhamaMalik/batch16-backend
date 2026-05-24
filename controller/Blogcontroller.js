@@ -1,77 +1,86 @@
 import { deleteImg, uploadImg } from "../config/cloud.js";
 import Blog from "../models/Posts.js";
 
-const createblog =async (req,res)=>{
+const createblog = async (req, res) => {
   try {
-      const {title,content} = req.body
- 
-if(!req.file){
-return res.status(400).json({messag:'image requied'})
-}
+    const { title, content, isPaid, price } = req.body;
 
-const uploaData = await uploadImg(req.file)
-if(!uploaData){
-  return res.status(400).json({
-    status:false,
-    messag:"error in upload image"
-  })
-}
+    if (!req.file) {
+      return res.status(400).json({ message: 'image required' });
+    }
 
-let data = {
- title,
- content,
- author:req.user._id,
- image:uploaData.secure_url,
- public_id:uploaData.public_id
-}
- const blog = await Blog.create(data);
- res.status(201).json({
-  status:true,
-  messag:'blog created succesfully',
-  blog:blog
- })
+    const uploaData = await uploadImg(req.file);
+    if (!uploaData) {
+      return res.status(400).json({
+        status: false,
+        message: "error in upload image"
+      });
+    }
+
+    const isPaidBoolean = isPaid === 'true' || isPaid === true;
+
+    let data = {
+      title,
+      content,
+      author: req.user._id,
+      image: uploaData.secure_url,
+      public_id: uploaData.public_id,
+      isPaid: isPaidBoolean,
+      price: isPaidBoolean ? Number(price) : 0
+    };
+
+    const blog = await Blog.create(data);
+    
+    res.status(201).json({
+      status: true,
+      message: 'blog created successfully',
+      blog: blog
+    });
   } catch (error) {
-     res.status(404).json({
-  status:false,
-  messag:error.message,
-
- })
+    res.status(500).json({ 
+      status: false,
+      message: error.message,
+    });
   }
-}
+};
 
-
-
- const updateBlog = async (req, res) => {
+const updateBlog = async (req, res) => {
   try {
     const { id } = req.params; 
-    const { title, content } = req.body;
+    const { title, content, isPaid, price } = req.body;
 
     let blog = await Blog.findById(id);
     if (!blog) {
       return res.status(404).json({ success: false, message: "Blog not found!" });
     }
 
-    let updatedData = { title, content };
+    // Convert string values from FormData to correct types
+    // FormData sends boolean as string "true" / "false"
+    const isPaidBoolean = isPaid === 'true' || isPaid === true; 
+    
+    let updatedData = { 
+      title, 
+      content,
+      isPaid: isPaidBoolean,
+      // Agar blog paid hai to parsed price bhein, warna use 0 ya null karden
+      price: isPaidBoolean ? Number(price) : 0 
+    };
 
-    // 2. check image 
+    //  image 
     if (req.file) {
-      // A. remove old image
       if (blog.public_id) {
         await deleteImg(blog.public_id); 
       }
 
-      // B. upload new img
       const newUploadData = await uploadImg(req.file);
       if (!newUploadData) {
         return res.status(400).json({ success: false, message: "Error in uploading new image" });
       }
 
-      // C. add new image link in dara
       updatedData.image = newUploadData.secure_url;
       updatedData.public_id = newUploadData.public_id;
     }
 
-    // 3. update data in db
     const updatedBlog = await Blog.findByIdAndUpdate(id, updatedData, { new: true });
 
     res.status(200).json({
@@ -147,4 +156,22 @@ export const getBlogById = async (req, res) => {
     }
 };
 
-export { createblog, updateBlog, getMyBlogs };
+const getPublicBlogs = async (req, res) => {
+  try {
+    const query = { isBlocked: false }; 
+
+    const blogs = await Blog.find(query)
+      .populate('author', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: blogs.length,
+      blogs
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export { createblog, updateBlog, getMyBlogs, getPublicBlogs };
