@@ -23,4 +23,8 @@ app.use('/api/blog', blogRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api', stripeRouter )
 
+app.get('',(req,res)=>{
+res.send("Backend Deployed")
+})
+
 app.listen(process.env.PORT, ()=>console.log(`Server is running on port ${process.env.PORT}`));
