@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { checkoutSession, webHook } from "../controller/stripController.js";
+import { checkoutSession, webHook } from "../controller/StripController.js";
 
 
 const router = Router();
